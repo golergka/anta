@@ -1,0 +1,5 @@
+/.build/
+/logs/
+/agent-runs/
+/.venv/
+__pycache__/
