@@ -8,7 +8,6 @@ The smoke sample asks Codex to render one Anta Button with React.
 
 Use [uv](https://docs.astral.sh/uv/), Docker with Buildx, and the Node version in
 [`.node-version`](../../../.node-version).
-If you use Kiri on macOS, set `ANTA_BENCHMARK_DOCKER=kiri`.
 
 From the repository root, run:
 

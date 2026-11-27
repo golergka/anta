@@ -20,15 +20,8 @@ WORKSPACE = Path("/workspace")
 DEFAULT_MODEL = "gpt-5.4-mini"
 
 
-def backend():
-    return DockerBackend(
-        executable=os.environ.get("ANTA_BENCHMARK_DOCKER", "docker"),
-        context=os.environ.get("DOCKER_CONTEXT"),
-    )
-
-
 def docker(*args, timeout=40, capture=True, check=True):
-    command = [*backend().command, *args]
+    command = ["docker", *args]
     return subprocess.run(
         command, timeout=timeout, capture_output=capture, text=True, check=check
     )
@@ -114,7 +107,7 @@ def sample_workspace(model, *, offline=False):
             images["worker"],
         )
         wait_for_socket(name, "/tmp/coloph-agent-runtime.sock")
-        yield backend().attach(name=name), manifest
+        yield DockerBackend().attach(name=name), manifest
 
 
 @solver
