@@ -27,6 +27,40 @@ Then omit `-T offline=true`.
 Use `-T agent_model=<model>` to change the default model, `gpt-5.4-mini`.
 Inspect writes scores to `logs/` and Coloph writes agent records to `agent-runs/`.
 
+## Publish a run
+
+Create a public [Hugging Face Static HTML Space](https://huggingface.co/new-space).
+Publish only logs that you can share publicly.
+Keep the Space's default `index.html`.
+Create a [fine-grained token](https://huggingface.co/settings/tokens) with write access to that Space.
+Set these values in the runner's local `.env` file.
+
+```dotenv
+ANTA_HF_SPACE=owner/space-name
+HF_TOKEN=your-token
+```
+
+From the runner directory, pass one finished Inspect log to the publisher.
+
+```sh
+uv run --locked --extra publish python publish.py logs/your-run.eval
+```
+
+The publisher prints a link to Inspect View on the Space's `hf.space` domain.
+Each log has its own link. Later uploads keep earlier links and logs available.
+If the upload fails, run the publish command again with the same log.
+The bundle contains the selected Inspect log and its viewer.
+
+To upload automatically, give each local evaluation its own log directory.
+For example, run this after you prepare the smoke sample.
+
+```sh
+mkdir -p logs
+run_logs=$(mktemp -d logs/run.XXXXXX) &&
+  uv run --locked inspect eval smoke.py --log-dir "$run_logs" &&
+  uv run --locked --extra publish python publish.py "$run_logs"/*.eval
+```
+
 ## Sample environment
 
 Each sample gets a fresh, unprivileged Linux container with loopback networking only.

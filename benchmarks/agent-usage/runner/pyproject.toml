@@ -6,3 +6,9 @@ dependencies = [
     "coloph-agent-inspect @ https://github.com/golergka/coloph-agent-inspect/releases/download/v0.1.1/coloph_agent_inspect-0.1.1-py3-none-any.whl",
     "coloph-agent-runtime @ https://github.com/golergka/coloph-agent-runtime/releases/download/v0.3.0/coloph_agent_runtime-0.3.0-py3-none-any.whl",
 ]
+
+[project.optional-dependencies]
+publish = [
+    "huggingface-hub==2.5.0",
+    "python-dotenv==1.2.4",
+]
