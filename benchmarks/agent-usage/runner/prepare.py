@@ -41,33 +41,22 @@ def prepare():
             context / "starter",
             ignore=shutil.ignore_patterns("node_modules", "dist"),
         )
-        for file in (
-            "Dockerfile",
-            "codex.toml",
-            "relay.py",
-            "smoke_responses.py",
-            "worker.py",
-        ):
+        for file in ("Dockerfile", "worker.py"):
             shutil.copy2(HERE / file, context)
-        images = {}
-        for target in ("worker", "relay"):
-            image_id = context / f"{target}.iid"
-            docker(
-                "build",
-                "--load",
-                "--target",
-                target,
-                "--iidfile",
-                str(image_id),
-                temporary,
-                timeout=None,
-                capture=False,
-            )
-            images[target] = image_id.read_text().strip()
+        image_id = context / "worker.iid"
+        docker(
+            "build",
+            "--load",
+            "--iidfile",
+            str(image_id),
+            temporary,
+            timeout=None,
+            capture=False,
+        )
         with tarball.open("rb") as packed_anta:
             digest = hashlib.file_digest(packed_anta, "sha256").hexdigest()
         manifest = {
-            "images": images,
+            "worker_image": image_id.read_text().strip(),
             "anta_commit": commit,
             "dirty_checkout": dirty,
             "anta_tarball_sha256": digest,

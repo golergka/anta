@@ -1,8 +1,0 @@
-model_provider = "benchmark"
-web_search = "disabled"
-
-[model_providers.benchmark]
-name = "Benchmark Responses relay"
-base_url = "http://127.0.0.1:8765/v1"
-wire_api = "responses"
-supports_websockets = false

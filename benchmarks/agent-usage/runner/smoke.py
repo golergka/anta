@@ -7,7 +7,7 @@ from inspect_ai import Task, task
 from inspect_ai.dataset import Sample
 from inspect_ai.scorer import CORRECT, INCORRECT, Score, accuracy, scorer
 
-from workspace import DEFAULT_MODEL, docker, isolated_codex
+from workspace import docker, isolated_codex
 
 SSR = """
 import { createServer } from 'vite'
@@ -31,7 +31,7 @@ def verify(container):
     try:
         result = docker(
             "exec",
-            container.resource_id,
+            container,
             "node",
             "--input-type=module",
             "-e",
@@ -68,19 +68,19 @@ def smoke_score():
 
 
 @task
-def anta_smoke(agent_model: str = DEFAULT_MODEL, offline: bool = False):
+def anta_smoke(agent_model: str | None = None):
     return Task(
         dataset=[
             Sample(
                 id="anta-package-smoke",
                 input=(
-                    "Create smoke.mjs in the workspace. Use the installed Anta Button and "
-                    "React server rendering to print the static markup for a button labeled "
-                    "Anta smoke. The grader loads smoke.mjs through Vite SSR. "
-                    "The Anta package contains its docs. The workspace has no internet access."
+                    "Create only smoke.mjs. Import Button from @antadesign/anta. "
+                    "Use React's createElement and renderToStaticMarkup to render Button "
+                    "with the label Anta smoke, then print the markup with console.log. "
+                    "The grader runs Vite SSR. No build or browser launch is needed."
                 ),
             )
         ],
-        solver=isolated_codex(agent_model, verify, offline=offline),
+        solver=isolated_codex(agent_model, verify),
         scorer=smoke_score(),
     )

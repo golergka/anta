@@ -1,34 +1,43 @@
-"""Connect Codex's loopback HTTP transport to the relay's Unix socket."""
+"""Run the Codex executor and expose it only on worker loopback."""
 
-import select
+import os
 import socket
-import socketserver
+import sys
+from pathlib import Path
 from threading import Thread
 
-from coloph_agent_runtime.worker import main
+HOST = "127.0.0.1"
+PORT = 8765
 
 
-class Forward(socketserver.BaseRequestHandler):
-    def handle(self):
-        with socket.socket(socket.AF_UNIX) as relay:
-            relay.connect("/relay/responses.sock")
-            peers = {self.request: relay, relay: self.request}
-            while peers:
-                ready, _, _ = select.select(list(peers), [], [], 300)
-                if not ready:
-                    return
-                for source in ready:
-                    target = peers[source]
-                    data = source.recv(65536)
-                    if data:
-                        target.sendall(data)
-                    else:
-                        target.shutdown(socket.SHUT_WR)
-                        del peers[source]
+def forward():
+    with socket.create_connection((HOST, PORT), timeout=3) as connection:
+        connection.settimeout(None)
+
+        def send():
+            while data := sys.stdin.buffer.read1(65536):
+                connection.sendall(data)
+            connection.shutdown(socket.SHUT_WR)
+
+        Thread(target=send, daemon=True).start()
+        while data := connection.recv(65536):
+            sys.stdout.buffer.write(data)
+            sys.stdout.buffer.flush()
+
+
+def serve():
+    # Codex resolves its working directory in both processes.
+    Path(os.environ["ANTA_WORKSPACE"]).symlink_to(
+        "/workspace", target_is_directory=True
+    )
+    os.execvp("codex", ["codex", "exec-server", "--listen", f"ws://{HOST}:{PORT}"])
 
 
 if __name__ == "__main__":
-    with socketserver.ThreadingTCPServer(("127.0.0.1", 8765), Forward) as server:
-        server.daemon_threads = True
-        Thread(target=server.serve_forever, daemon=True).start()
-        main()
+    if sys.argv[1:] == ["forward"]:
+        forward()
+    elif sys.argv[1:] == ["ready"]:
+        with socket.create_connection((HOST, PORT), timeout=1):
+            pass
+    else:
+        serve()

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec codex -c 'web_search="disabled"' --disable plugins --disable multi_agent "$@"
